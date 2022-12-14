@@ -2,8 +2,22 @@
 
 Code repo: https://github.com/LinkedInLearning/react-design-patterns-2895130.git
 
-<!-- START doctoc -->
-<!-- END doctoc -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Layout components](#layout-components)
+  - [Split screen components](#split-screen-components)
+    - [Passing jsx as props](#passing-jsx-as-props)
+    - [Passing jsx as `children`](#passing-jsx-as-children)
+  - [Lists and items](#lists-and-items)
+- [Container components](#container-components)
+- [Controlled and uncontrolled components](#controlled-and-uncontrolled-components)
+- [Higher order components](#higher-order-components)
+- [Custom hooks patterns](#custom-hooks-patterns)
+- [Functional programming in react](#functional-programming-in-react)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Layout components
 
