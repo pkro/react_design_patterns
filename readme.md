@@ -5,6 +5,37 @@ Code repo: https://github.com/LinkedInLearning/react-design-patterns-2895130.git
 <!-- START doctoc -->
 <!-- END doctoc -->
 
+## Side notes
+
+### Converting the course files to typescript
+
+```bash
+npm install --save typescript @types/node @types/react @types/react-dom @types/jest
+npm i --save-dev @types/react@latest @types/react-dom@latest @types/styled-components
+# if needed
+npm i --save styled-components @types/styled-components
+```
+
+Also rename `App.js` and other existing JSX files to e.g. `App.tsx`.
+
+### Good replacement for `fc` live template in IntelliJ
+
+Settings -> Editor -> Live templates -> TSReact
+
+```typescript jsx
+import React from 'react';
+
+type $FILE_NAME$PropsType = {
+
+};
+
+export const $FILE_NAME$ = ({}: $FILE_NAME$PropsType) => {
+  
+  return (<>$END$</>);
+};
+```
+
+
 ## Layout components
 
 Components that deal primarily with arranging other components on the page, e.g. split screens, lists and items, modals.
@@ -117,6 +148,62 @@ Usage:
     </SplitScreen>
 
 ### Lists and items
+
+To display lists of different types of items, e.g. `SmallPersonListItem`, `LargePersonListItem`, `ProductListItem` etc. we would create components like `SmallPersonList`, `ProductList` etc.
+
+To have only one component for the list, we can make a component that gets passed in all the necessary information to display a list of the passed items:
+
+SmallPersonListItem.tsx (example of one of the many possible items)
+
+    import React from 'react';
+    import {people} from "../App";
+    
+    type SmallPersonListItemPropsType = { person: typeof people[0] };
+    
+    const SmallPersonListItem = ({person: {name, age, hairColor, hobbies}}: SmallPersonListItemPropsType) => {
+    
+        return (<p>{name}, {age} years old</p>);
+    };
+    
+    export default SmallPersonListItem;
+
+The generic list component `RegularList.tsx`:
+
+    type RegularListPropsType = { 
+        items: unknown[],
+        itemPropName: string,
+        itemComponent: React.ElementType };
+    
+    export const RegularList = ({
+                             items,        // e.g. the people array defined in App.tsx
+                             itemPropName, // e.g. "person" as that's the prop name in the *PersonListItem.tsx files
+                             itemComponent: ItemComponent // e.g. SmallPersonListItem
+                         }: RegularListPropsType) => {
+    
+        return (<>
+            {items.map((item, i) => (
+                <ItemComponent
+                    /*index shouldn't be used, maybe better would be a property that is known to exist in all
+                    * possible item lists, such as key={item.id} */
+                    key={i}
+                    /*when passing e.g. "person" as resourceName, this changes to "person={item}"*/
+                    {...{[itemPropName]: item}}
+                />
+            ))}
+        </>);
+    };
+    
+
+Usage:
+
+            <h1>Persons small</h1>
+            <RegularList items={people} itemPropName={'person'} itemComponent={SmallPersonListItem}/>
+            <h1>Persons large</h1>
+            <RegularList items={products} itemPropName={'product'} itemComponent={LargeProductListItem}/>
+
+### Modal components
+
+
 
 ## Container components
 
