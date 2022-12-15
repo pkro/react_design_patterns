@@ -6,11 +6,15 @@ Code repo: https://github.com/LinkedInLearning/react-design-patterns-2895130.git
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
+- [Side notes](#side-notes)
+  - [Converting the course files to typescript](#converting-the-course-files-to-typescript)
+  - [Good replacement for `fc` live template in IntelliJ](#good-replacement-for-fc-live-template-in-intellij)
 - [Layout components](#layout-components)
   - [Split screen components](#split-screen-components)
     - [Passing jsx as props](#passing-jsx-as-props)
     - [Passing jsx as `children`](#passing-jsx-as-children)
   - [Lists and items](#lists-and-items)
+  - [Modal components](#modal-components)
 - [Container components](#container-components)
 - [Controlled and uncontrolled components](#controlled-and-uncontrolled-components)
 - [Higher order components](#higher-order-components)
