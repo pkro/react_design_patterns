@@ -1,5 +1,6 @@
 ### Node template
 .idea/
+course_repo/*
 course_repo/
 # Logs
 logs
