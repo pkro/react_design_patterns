@@ -1,6 +1,7 @@
 import {RegularList} from "./RegularList";
 import SmallPersonListItem from "./people/SmallPersonListItem";
 import LargePersonListItem from "./people/LargePersonListItem";
+import {Modal} from "./Modal";
 
 export const people = [{
     name: 'John Doe',
@@ -39,10 +40,12 @@ export const products = [{
 function App() {
     return (
         <>
-            <h1>Persons small</h1>
-            <RegularList items={people} itemPropName={'person'} itemComponent={SmallPersonListItem}/>
-            <h1>Persons large</h1>
-            <RegularList items={people} itemPropName={'person'} itemComponent={LargePersonListItem}/>
+            <Modal>
+                <h1>Persons small</h1>
+                <RegularList items={people} itemPropName={'person'} itemComponent={SmallPersonListItem}/>
+                <h1>Persons large</h1>
+                <RegularList items={people} itemPropName={'person'} itemComponent={LargePersonListItem}/>
+            </Modal>
         </>
     );
 }
