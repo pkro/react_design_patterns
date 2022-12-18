@@ -1,18 +1,19 @@
 const express = require('express');
+const cors = require('cors')
 
 const app = express();
-
 app.use(express.json());
+app.use(cors());
 
 let currentUser = {
-	name: 'John Doe',
+	name: 'John Does',
 	age: 54,
 	hairColor: 'brown',
 	hobbies: ['swimming', 'bicycling', 'video games'],
 };
 
 let users = [{
-	name: 'John Doe',
+	name: 'John Does',
 	age: 54,
 	hairColor: 'brown',
 	hobbies: ['swimming', 'bicycling', 'video games'],
