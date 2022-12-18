@@ -34,7 +34,7 @@ npm i --save-dev @types/react@latest @types/react-dom@latest @types/styled-compo
 npm i --save styled-components @types/styled-components
 ```
 
-Also rename `App.js` and other existing JSX files to e.g. `App.tsx`.
+Also rename `App.tsx` and other existing JSX files to e.g. `App.tsx`.
 
 ### Good replacement for `fc` live template in IntelliJ
 
@@ -263,6 +263,69 @@ Just a basic modal component without using portals:
 ## Container components
 
 = Components that take care of loading and managing data for their child components. This makes components more reusable and testable as the data can be passed as props to the display components, so the display components don't need to know where the data comes from (dumb components).
+
+Example of a container component that loads the current user and passes it to its child components (there is still a typescript problem: `user` in `UserInfo` must be defined as optional OR passed a dummy object in `App.tsx` because otherwise ts complains that a prop is missing in `App.tsx`):
+
+UserInfo.tsx (presentational component that just shows user info):
+
+    // ...
+    type UserInfoProps = {
+        user?: userType;
+    }
+    
+    export function UserInfo ({ user }: UserInfoProps) {
+        const { name, age, hairColor, hobbies } = user || {};
+        console.log(user);
+        return user ? (
+            <>
+            <h3>{name}</h3>
+            { /* ... */ }
+            </>
+        ) : <p>Loading...</p>;
+    }
+
+CurrentUserLoader.tsx (container component that loads the user and passes it as a prop to its child components):
+
+export type ChildrenPropsType = {
+    user: userType | null;
+}
+
+type CurrentUserLoaderPropsType = {
+    children: ReactNode;
+};
+
+    export const CurrentUserLoader = ({children}: CurrentUserLoaderPropsType) => {
+        const [user, setUser] = useState(null);
+    
+        useEffect(() => {
+            (async () => {
+                try {
+                    const response = await axios.get('http://localhost:8080/current-user');
+                    const currentUser = response.data;
+                    setUser(currentUser);
+                } catch (e) {
+                    console.log(e);
+                }
+            })();
+        }, []);
+        return (<>
+            {React.Children.map(children, child => {
+                if (React.isValidElement(child)) {
+                    return React.cloneElement(child as React.ReactElement<ChildrenPropsType>, {user});
+                    // or just return React.cloneElement(child as React.ReactElement<any>, {user});
+                }
+                return child;
+            })}
+        </>);
+    };
+
+
+Usage:
+
+    <CurrentUserLoader>
+        <UserInfo />
+    </CurrentUserLoader>
+
 
 ## Controlled and uncontrolled components
 
