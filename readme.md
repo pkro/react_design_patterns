@@ -264,7 +264,9 @@ Just a basic modal component without using portals:
 
 = Components that take care of loading and managing data for their child components. This makes components more reusable and testable as the data can be passed as props to the display components, so the display components don't need to know where the data comes from (dumb components).
 
-Example of a container component that loads the current user and passes it to its child components (there is still a typescript problem: `user` in `UserInfo` must be defined as optional OR passed a dummy object in `App.tsx` because otherwise ts complains that a prop is missing in `App.tsx`):
+### CurrentUserLoader
+
+Basic example of a container component that loads the current user and passes it to its child components (there is still a typescript problem: `user` in `UserInfo` must be defined as optional OR passed a dummy object in `App.tsx` because otherwise ts complains that a prop is missing in `App.tsx`):
 
 UserInfo.tsx (presentational component that just shows user info):
 
@@ -286,13 +288,13 @@ UserInfo.tsx (presentational component that just shows user info):
 
 CurrentUserLoader.tsx (container component that loads the user and passes it as a prop to its child components):
 
-export type ChildrenPropsType = {
-    user: userType | null;
-}
-
-type CurrentUserLoaderPropsType = {
-    children: ReactNode;
-};
+    export type ChildrenPropsType = {
+        user: userType | null;
+    }
+    
+    type CurrentUserLoaderPropsType = {
+        children: ReactNode;
+    };
 
     export const CurrentUserLoader = ({children}: CurrentUserLoaderPropsType) => {
         const [user, setUser] = useState(null);
@@ -326,6 +328,141 @@ Usage:
         <UserInfo />
     </CurrentUserLoader>
 
+### UserLoader
+
+Generic user loader by id:
+
+    // ...
+    type UserLoaderPropsType = {
+        children: ReactNode;
+        userId: string;
+    };
+    
+    export const UserLoader = ({userId, children}: UserLoaderPropsType) => {
+        const [user, setUser] = useState(null);
+    
+        useEffect(() => {
+            (async () => {
+                try {
+                    const response = await axios.get(`http://localhost:8080/users/${userId}`);
+    // ...
+
+Usage:
+
+    <UserLoader userId={'1234'}>
+        <UserInfo/>
+    </UserLoader>
+
+### ResourceLoader: generic loader for any type of resource
+
+Load any resource with a generic loader; 
+    
+    export type ChildrenPropsType = unknown; // must be a better way
+    
+    type ResourceLoaderPropsType = {
+        children: ReactNode;
+        resourceUrl: string;
+        resourceName: string;
+    };
+    
+    export const ResourceLoader = ({resourceUrl, resourceName, children}: ResourceLoaderPropsType) => {
+        const [state, setState] = useState(null);
+    
+        useEffect(() => {
+            (async () => {
+                try {
+                    const response = await axios.get(resourceUrl);
+                    setState(response.data);
+                } catch (e) {
+                    console.log(e);
+                }
+            })();
+        }, [resourceUrl]);
+        return (<>
+            {React.Children.map(children, child => {
+                if (React.isValidElement(child)) {
+                    return React.cloneElement(child as React.ReactElement<ChildrenPropsType>, {[resourceName]: state});
+                }
+                return child;
+            })}
+        </>);
+    };
+
+Usage:
+
+    <ResourceLoader resourceUrl={'/users/3456'} resourceName={'user'}>
+        <UserInfo/>
+    </ResourceLoader>
+    <ResourceLoader resourceUrl={'/products/1234'} resourceName={'product'}>
+        <ProductInfo/>
+    </ResourceLoader>
+
+The problem with this component is that the parent component has to know about resource urls etc.
+
+### DataSource component
+
+We can further abstract out the data loading part by passing a data loader function instead of an url. This way the knowledge about actual urls etc. can be extracted to its own api file.
+
+DataSource.tsx:
+
+    // ...
+    export type ChildrenPropsType = unknown;
+    
+    type ResourceLoaderPropsType = {
+        children: ReactNode;
+        getDataFunction: () => Promise<any>
+        resourceName: string;
+    };
+
+    export const DataSource = ({getDataFunction, resourceName, children}: ResourceLoaderPropsType) => {
+        const [state, setState] = useState(null);
+    
+        useEffect(() => {
+            (async () => {
+                try {
+                    const data = await getDataFunction();
+                    setState(data);
+    // ...
+
+Usage:
+    
+    // ...
+    const getServerData = (url: string) => (id: string) => {
+        return async () => {
+            const response = await axios.get(`${url}/${id}`);
+            return response.data;
+        }
+    }
+    
+    const getUser = getServerData('/users');
+    const getProduct = getServerData('/products');
+    
+    function App() {
+        return (
+            <>
+                <DataSource getDataFunction={getUser('1234')} resourceName={'user'}>
+                    <UserInfo/>
+                </DataSource>
+    // ...
+
+### Loading data from localStorage
+
+The above function could also be used to load data from localStorage:
+
+    // ...
+    const getLocalStorageData = (key: string) => {
+        return localStorage.getItem(key);
+    }
+    
+    const Text = ( {message}: {message?: string}) => <h1>{message}</h1>;
+    
+    function App() {
+        return (
+            <>
+                <DataSource getDataFunction={()=>getLocalStorageData('test123')} resourceName={'message'}>
+                    <Text />
+                </DataSource>
+    // ...
 
 ## Controlled and uncontrolled components
 

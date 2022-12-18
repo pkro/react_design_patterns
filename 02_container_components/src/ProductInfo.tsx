@@ -8,10 +8,10 @@ const exampleProduct = {
 export type productType = typeof exampleProduct;
 
 export type ProductInfoProps = {
-	product: productType;
+	product?: productType;
 }
 export const ProductInfo = ({ product }: ProductInfoProps) => {
-	const { name, price, description, rating } = product;
+	const { name, price, description, rating } = product || {};
 
 	return (
 		<>
