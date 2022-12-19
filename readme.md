@@ -796,6 +796,18 @@ The controlled flow allows for making steps optional based on the data of previo
 
 ## Higher order components
 
+- A component (which is just a function) that returns another component instead of JSX
+- Can share complex behavior between multiple components
+- Can add extra functionality to existing components
+
+Normal component:
+
+`const SomeComponent = ()=><h1>Hey!</h1>`
+
+`const HOCComponent = () => () => <h1>Hey!</h1>`
+
+
+
 ## Custom hooks patterns
 
 ## Functional programming in react
