@@ -466,6 +466,323 @@ The above function could also be used to load data from localStorage:
 
 ## Controlled and uncontrolled components
 
+Note: the form examples are react basics, the meat of this section is in the onboarding flow section.
+
+- **Uncontrolled**: the component keeps track for all its internal state and "releases" data only when some event occurs, e.g. the form submit event
+- **Controlled**: all state and state management functions are passed as props from the parent component 
+
+Usually controlled components make code more reusable and easier to test.
+
+### Side note: useRef vs createRef
+
+>A ref is a plain JS object { current: <some value> }.
+> 
+>React.createRef() is a factory returning a ref { current: null } - no magic involved.
+> 
+>useRef(initValue) also returns a ref { current: initValue } akin to React.createRef(). Besides, it memoizes this ref to be persistent across multiple renders in a function component.
+[source](https://stackoverflow.com/questions/54620698/whats-the-difference-between-useref-and-createref)
+
+    function useRef(value) {
+      const [ref] = useState(createRef(value));
+      return ref;
+    }
+
+[source](https://old.reddit.com/r/reactjs/comments/a2pt15/when_would_you_use_reactcreateref_vs_reactuseref/eb17vz5/)
+
+In short, 
+- `createRef` creates a new ref on every call, useRef memoizes it.
+- `useRef` should be used in functional components unless memoization is not desired
+
+### Uncontrolled form example
+
+UncontrolledForm.tsx
+
+    import React, {createRef, FormEvent} from 'react';
+    
+    type UncontrolledFormPropsType = {};
+    
+    export const UncontrolledForm = ({}: UncontrolledFormPropsType) => {
+        const nameInput = createRef<HTMLInputElement>();
+        const ageInput = createRef<HTMLInputElement>();
+        const hairColorInput = createRef<HTMLInputElement>();
+    
+    
+        const handleSubmit = (e: FormEvent) => {
+            e.preventDefault();
+            const name = nameInput.current?.value;
+            const age = ageInput.current?.value;
+            const hairColor = hairColorInput.current?.value;
+            // ... do stuff with these values
+        }
+    
+        return (<form onSubmit={handleSubmit}>
+            <input ref={nameInput} name={"name"} type={"text"} placeholder={"Name"} />
+            <input ref={ageInput} name={"age"} type={"text"} placeholder={"Age"} />
+            <input ref={hairColorInput} name={"hairColor"} type={"text"} placeholder={"Hair color"} />
+    
+            <input type={"submit"} placeholder={"Submit"} />
+        </form>);
+    };
+
+
+Usage:
+
+    <UncontrolledForm />
+
+### Controlled form example
+
+Note: the form itself is not controlled in the sense of the definition but the input fields are.
+If the form itself were controlled, the values and setter functions would be manged in the parent component and passed in as props to the ControlledForm component.
+
+ControlledForm.tsx
+
+    export const ControlledForm = ({}: UncontrolledFormPropsType) => {
+        const [name, setName] = useState('');
+        const [age, setAge] = useState('');
+        const [hairColor, setHairColor] = useState('');
+    
+        const [error, setError] = useState('');
+    
+        useEffect(()=> {
+            setError(name.length < 3 ? 'Name must be at least 3 characters' : '');
+        }, [name]);
+    
+        const handleSubmit = (e: FormEvent) => {
+            e.preventDefault();
+        }
+        return (<form onSubmit={handleSubmit}>
+            {error && <div>{error}</div>}
+            <input value={name}
+                   onChange={e=>setName(e.target.value)}
+                   name={"name"} type={"text"} placeholder={"Name"} />
+            <input value={age}
+                   onChange={e=>setAge(e.target.value)}
+                   name={"age"} type={"text"} placeholder={"Age"} />
+            <input value={hairColor}
+                   onChange={e=>setHairColor(e.target.value)}
+                   name={"hairColor"} type={"text"} placeholder={"Hair color"} />
+    
+            <input type={"submit"} placeholder={"Submit"} />
+        </form>);
+    };
+
+### Controlled modals
+
+The modal example from [Modal components](#Modal_components) is an uncontrolled component in the sense that is controls the opened status by itself by providing a button to toggle the state.
+
+The problem is that parent components have no control about what the modal is doing (we can't provide a different mechanism / button to control if the modal is opened).
+
+Controlled modal example:
+
+    // ...
+    type ModalPropsType = {
+        shouldShow: boolean;
+        setShouldShow: (b: boolean) => void;
+        children: React.ReactNode;
+    };
+    
+    export const ControlledModal = ({shouldShow, setShouldShow, children}: ModalPropsType) => {
+        // ...
+        return (<>
+            {shouldShow &&
+                <ModalBackground onClick={() => setShouldShow(false)}>
+                    <ModalBody onClick={e => e.stopPropagation()}>
+                        <button type={'button'} onClick={() => setShouldShow(false)}>hide</button>
+                        {children}
+                    </ModalBody>
+                </ModalBackground>}
+        </>);
+    };
+
+Usage:
+
+    <button onClick={() => setShowModal(!showModal)} type={'button'}>show / hide modal</button>
+    <ControlledModal shouldShow={showModal} setShouldShow={setShowModal}>
+        <h1>Modal content</h1>
+    </ControlledModal>
+
+### Uncontrolled onboarding flows
+
+Onboarding flow: showing basic steps in an onboarding process sequentially.
+
+For a first draft version with back / forward buttons see `UncontrolledOnboardingFlowPkro`.
+
+import React, {useState} from 'react';
+
+export type ChildrenPropsType = {
+goToNext: (stepData: Object)=>void;
+}
+
+type UncontrolledOnboardingFlowPropsType = {
+children: React.ReactNode;
+onFinish: (data: unknown) => void;
+};
+
+UncontrolledOnboardingFlow.tsx
+
+    export const UncontrolledOnboardingFlow = ({ onFinish, children }: UncontrolledOnboardingFlowPropsType) => {
+        const [onBoardingData, setOnboardingData] = useState({});
+        const [currentIndex, setCurrentIndex] = useState(0);
+    
+        // this allows us to sequentially step through the children provided by the parent component
+        const childComponents = React.Children.toArray(children);
+        const currentChild = childComponents[currentIndex];
+    
+        const goToNext = (stepData: Object) => {
+            const nextIndex = currentIndex+1;
+            const updatedData = {
+                ...onBoardingData,
+                ...stepData
+            };
+    
+            if(nextIndex < childComponents.length) {
+                setCurrentIndex(nextIndex);
+            } else {
+                onFinish(updatedData);
+            }
+    
+            setOnboardingData(updatedData);
+    
+        };
+    
+        if (React.isValidElement(currentChild)) {
+            return React.cloneElement(currentChild as React.ReactElement<ChildrenPropsType>, {goToNext});
+        }
+        return <></>;
+    };
+
+Usage:
+
+    const Step1 = ({goToNext}: { goToNext?: (stepData: Object) => void }) => {
+        const ref = useRef<HTMLInputElement>(null);
+        return (<>
+            <h1>Step 1</h1>
+            <input type={'text'} placeholder={'name'} ref={ref} />
+            <button onClick={()=>goToNext!({name: ref.current?.value})}>Next</button>
+        </>);
+    };
+    
+    const Step2 = ({goToNext}: { goToNext?: (stepData: Object) => void }) => {
+        const ref = useRef<HTMLInputElement>(null);
+    
+        return (<>
+            <h1>Step 2</h1>
+            <input type={'text'} placeholder={'hair color'} ref={ref} />
+            <button onClick={()=>goToNext!({hairColor: ref.current?.value})}>Next</button>
+        </>);
+    };
+    
+    const Step3 = ({goToNext}: { goToNext?: (stepData: Object) => void }) => {
+        const ref = useRef<HTMLInputElement>(null);
+    
+        return (<>
+            <h1>Step 3</h1>
+            <input type={'text'} placeholder={'age'} ref={ref} />
+            <button onClick={()=>goToNext!({age: ref.current?.value})}>Next</button>
+        </>);
+    };
+    
+    function App() {
+        return (
+            <>
+                <UncontrolledOnboardingFlow onFinish={(cdata: unknown) =>{console.log(cdata); window.alert('onboarding comploete');}}>
+                    <Step1 />
+                    <Step2 />
+                    <Step3 />
+                </UncontrolledOnboardingFlow>
+            </>
+        );
+    }
+
+### Controlled onboarding flow
+
+ControlledOnboardingFlow.tsx
+
+    export type ChildrenPropsType = {
+        onNext: (stepData: object)=>void;
+    }
+    
+    type ControlledOnboardingFlowPropsType = {
+        children: React.ReactNode;
+        currentIndex: number;
+        onNext: (stepData: object)=>void;
+        onFinish: (data: unknown) => void;
+    };
+    
+    export const ControlledOnboardingFlow = ({ onFinish, currentIndex, onNext, children }: ControlledOnboardingFlowPropsType) => {
+        // this allows us to sequentially step through the children provided by the parent component
+        const childComponents = React.Children.toArray(children);
+        const currentChild = childComponents[currentIndex];
+    
+        if (React.isValidElement(currentChild)) {
+            return React.cloneElement(currentChild as React.ReactElement<ChildrenPropsType>, {onNext});
+        }
+        return <></>;
+    };
+
+The controlled flow allows for making steps optional based on the data of previous steps:
+
+    // ...
+    const Step1 = ({onNext}: { onNext?: (stepData: Object) => void }) => {
+        const ref = useRef<HTMLInputElement>(null);
+        return (<>
+            <h1>Step 1</h1>
+            <input type={'text'} placeholder={'name'} ref={ref}/>
+            <button onClick={() => onNext!({name: ref.current?.value})}>Next</button>
+        </>);
+    };
+    
+    const Step2 = ({onNext}: { onNext?: (stepData: Object) => void }) => {
+        const ref = useRef<HTMLInputElement>(null);
+    
+        return (<>
+            <h1>Step 2</h1>
+            <input type={'text'} placeholder={'age'} ref={ref}/>
+            <button onClick={() => onNext!({age: ref.current?.value})}>Next</button>
+        </>);
+    };
+    
+    const Step3 = ({onNext}: { onNext?: (stepData: Object) => void }) => {
+        // ... same-ish
+    };
+    
+    const DiscountMessage = ({onNext}: { onNext?: (stepData: Object) => void }) => {
+        return (<>
+            <h1>You qualify for senior discount!</h1>
+            <button onClick={() => onNext!({})}>Next</button>
+        </>);
+    };
+    
+    function App() {
+        const [onBoardingData, setOnboardingData] = useState({});
+        const [currentIndex, setCurrentIndex] = useState(0);
+    
+        const onNext = (stepData: Object) => {
+            setOnboardingData({
+                ...onBoardingData,
+                ...stepData
+            });
+            setCurrentIndex(currentIndex + 1);
+        };
+    
+        return (
+            <>
+                <ControlledOnboardingFlow
+                    currentIndex={currentIndex}
+                    onNext={onNext}
+                    onFinish={(cdata: unknown) => {
+                        console.log(cdata);
+                        window.alert('onboarding complete');
+                    }}>
+                    <Step1/>
+                    <Step2/>
+                    {(onBoardingData as {} & { age: number }).age! > 65 && <DiscountMessage/>}
+                    <Step3/>
+                </ControlledOnboardingFlow>
+            </>
+        );
+    }
+
 ## Higher order components
 
 ## Custom hooks patterns

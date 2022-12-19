@@ -1,10 +1,13 @@
 import {useState} from 'react';
 import styled from "styled-components";
 
-type ModalPropsType = { children: React.ReactNode };
+type ModalPropsType = {
+    shouldShow: boolean;
+    setShouldShow: (b: boolean) => void;
+    children: React.ReactNode;
+};
 
-export const Modal = ({children}: ModalPropsType) => {
-
+export const ControlledModal = ({shouldShow, setShouldShow, children}: ModalPropsType) => {
     const ModalBackground = styled.div`
     position: fixed;
     z-index: 1;
@@ -22,9 +25,8 @@ export const Modal = ({children}: ModalPropsType) => {
     padding: 20px;
     width: 50%;
     `;
-    const [shouldShow, setShouldShow] = useState(false);
+
     return (<>
-        <button type={'button'} onClick={() => setShouldShow(true)}>show</button>
         {shouldShow &&
             <ModalBackground onClick={() => setShouldShow(false)}>
                 <ModalBody onClick={e => e.stopPropagation()}>
