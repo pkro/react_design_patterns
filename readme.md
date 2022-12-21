@@ -2,6 +2,8 @@
 
 Code repo: https://github.com/LinkedInLearning/react-design-patterns-2895130.git
 
+All code is converted to typescript.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -806,6 +808,150 @@ Normal component:
 
 `const HOCComponent = () => () => <h1>Hey!</h1>`
 
+[Useful link for typescript HOCs](https://react-typescript-cheatsheet.netlify.app/docs/hoc/full_example/)
+
+
+### Printing props wiht HOCs
+
+Basic HOC to print the props of a component to the console:
+
+printProps.tsx
+
+    export const printProps = (WrappedComponent: React.ComponentType) => {
+        return (props: any) => {
+            console.log(props);
+            return <WrappedComponent {...props} />
+        }
+    }
+
+Usage:
+
+    const UserInfoWrapped = printProps(UserInfo);
+    function App() {
+        return (
+            <UserInfoWrapped user={{
+                id: '1234',
+                name: 'John Does',
+                age: 54,
+                hairColor: 'brown',
+                hobbies: ['swimming', 'bicycling', 'video games'],
+            }} />
+        );
+    }
+
+### Loading data with HOCs
+
+Works similar to container components:
+
+withUser.tsx
+
+    // ...
+    import {UserInfoProps, userType} from "./UserInfo";
+    
+    export const withUser = (Component: React.ComponentType<UserInfoProps>, userId: string | number) => {
+        return (props: UserInfoProps) => {
+            const [user, setUser] = useState<userType | null>(null);
+            useEffect(()=>{
+                (async ()=>{
+                    const response = await axios.get(`/users/${userId}`)
+                    setUser(response.data);
+                })();
+            }, [])
+    
+            return <>{user && <Component {...props} user={user} />}</>
+        }
+    }
+
+Usage:
+
+    const UserInfoWithLoader = withUser(UserInfo, 1234);
+    // ...
+    <UserInfoWithLoader />
+
+### Modifying (server) data with HOCs
+
+The following HOC allows *any* component that might need to make changes to a user to get the relevant functions / data.
+
+A HOC to provide basic user loading and one CRUD function (update) and rollback changes functionality:
+
+    export const withEditableUser = (Component: React.ComponentType<any>, userId: string | number) => {
+        return (props: any) => {
+            const [originalUser, setOriginalUser] = useState<userType | null>(null);
+            const [user, setUser] = useState<userType | null>(null);
+    
+            useEffect(() => {
+                (async () => {
+                    const response = await axios.get(`/users/${userId}`);
+                    setOriginalUser(response.data);
+                    setUser(response.data);
+                })();
+            }, []);
+    
+            const onChangeUser = (changes: Partial<userType>) => {
+                if (user) {
+                    setUser({
+                        ...user,
+                        ...changes
+                    });
+                }
+            };
+    
+            const onSaveUser = async () => {
+                const response = await axios.post(`/users/${userId}`, {user});
+                setOriginalUser(response.data);
+                setUser(response.data);
+            };
+    
+            const onResetUser = () => setUser(originalUser);
+    
+            return <>{originalUser && <Component
+                {...props}
+                user={user}
+                onSaveUser={onSaveUser}
+                onChangeUser={onChangeUser}
+                onResetUser={onResetUser}
+            />}</>;
+        };
+    };
+
+Usage see next section
+
+### Creating forms with HOCs
+
+Usage of above HOC wrapper:
+
+    export type UserInfoFormPropsType = {
+        user: userType,
+        onChangeUser: (u: Partial<userType>) => void,
+        onSaveUser: () => void,
+        onResetUser: () => void
+    };
+    
+    // we export the component pre-wrapped instead of doing it later
+    // though this takes away the advantage of having a testable component that we can pass
+    // mocked data / functions, doesn't it?
+    export const UserInfoForm = withEditableUser(
+        ({user, onChangeUser, onSaveUser, onResetUser}: UserInfoFormPropsType) => {
+            const {name, age, hairColor} = user || {};
+    
+            return user ? (<>
+                <label>Name:
+                    <input value={name} onChange={e => onChangeUser({name: e.target.value})}/>
+                </label>
+                <label>Age:
+                    <input type="number" value={age} onChange={e => onChangeUser({age: Number(e.target.value)})}/>
+                </label>
+                <label>Hair color:
+                    <input value={hairColor} onChange={e => onChangeUser({hairColor: e.target.value})}/>
+                </label>
+    
+                <button onClick={onResetUser}>Reset</button>
+                <button onClick={onSaveUser}>Save changes</button>
+            </>) : <p>Loading...</p>;
+        }, "1234"
+    );
+
+### HOC improvements
 
 
 ## Custom hooks patterns

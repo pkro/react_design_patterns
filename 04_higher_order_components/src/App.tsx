@@ -1,6 +1,8 @@
+import {UserInfoForm} from "./UserInfoForm";
+
 function App() {
     return (
-        <h1>Your code goes here</h1>
+        <UserInfoForm />
     );
 }
 
