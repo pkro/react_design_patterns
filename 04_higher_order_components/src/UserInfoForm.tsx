@@ -1,6 +1,7 @@
 import React from 'react';
 import {withEditableUser} from "./withEditableUser";
 import {userType} from "./UserInfo";
+import {withEditableResource} from "./withEditableResource";
 
 export type UserInfoFormPropsType = {
     user: userType,
@@ -12,7 +13,7 @@ export type UserInfoFormPropsType = {
 // we export the component pre-wrapped instead of doing it later
 // though this takes away the advantage of having a testable component that we can pass
 // mocked data / functions, doesn't it?
-export const UserInfoForm = withEditableUser(
+export const UserInfoForm = withEditableResource(
     ({user, onChangeUser, onSaveUser, onResetUser}: UserInfoFormPropsType) => {
         const {name, age, hairColor} = user || {};
 
@@ -30,7 +31,7 @@ export const UserInfoForm = withEditableUser(
             <button onClick={onResetUser}>Reset</button>
             <button onClick={onSaveUser}>Save changes</button>
         </>) : <p>Loading...</p>;
-    }, "1234"
+    }, "/users/1234", "user"
 );
 
 
