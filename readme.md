@@ -1018,7 +1018,131 @@ Usage:
 
 ## Custom hooks patterns
 
+Self defined hooks that usually combine the functionality of other hooks, e.g.
+
+    export const useCurrentUser = () => {
+        const [user, setUser] = useState<userType | null>(null);
+        useEffect(()=>{
+            (async ()=>{
+                const response = await axios.get(`/current-user}`)
+                setUser(response.data);
+            })();
+        }, []);
+    
+        return user;
+    }
+
+Usage:
+
+    const products = useProducts();
+
+Custom hooks *must* start with "use".
+
+They're used to share complex behaviour between multiple components just as containers and HOCs.
+
+### useUser
+
+Basic user loader:
+
+useUser.tsx
+
+    export const useUser = (userId: number | string) => {
+        const [user, setUser] = useState<userType | undefined>(undefined);
+        useEffect(()=>{
+            (async ()=>{
+                const response = await axios.get(`/users/${userId}`);
+                setUser(response.data);
+            })();
+        }, []);
+    
+        return user;
+    }
+
+UserInfo.tsx
+
+    // ...
+    export type UserInfoProps = {
+        userId: string | number;
+    }
+    
+    export function UserInfo ({ userId }: UserInfoProps) {
+        const user = useUser(userId);
+        const { name, age, hairColor, hobbies } = user || {};
+    // ...
+
+App.tsx
+
+    <UserInfo userId={"2345"}/>
+
+### useResource
+
+Same generalization, just with less typescript shennanigans to use different kind of resources, e.g. products or users.
+
+useResource.tsx
+
+    export const useResource = (resourceUrl: string) => {
+        const [data, setData] = useState<userType | undefined>(undefined);
+        useEffect(()=>{
+            (async ()=>{
+                const response = await axios.get(resourceUrl);
+                setData(response.data);
+            })();
+        }, []);
+    
+        return data;
+    }
+
+UserInfo.tsx
+    
+    // ... no change
+    //const user = useUser(userId);
+    const user = useResource(`/users/${userId}`);
+    // ... no change
+
+### useDataSource
+
+Same as before, just passing the whole data getter function instead of the URL. This makes it possible to get data from any resource, not just a REST server (e.g. localStorage).
+
+    export const useDataSource = (getResource: () => any) => {
+        const [data, setData] = useState<userType | undefined>(undefined);
+        useEffect(() => {
+            (async () => {
+                const result = await getResource();
+                setData(result);
+            })();
+        }, [getResource]);
+    
+        return data;
+    };
+
+UserInfo.tsx
+
+    // ...
+    const serverResource = (resourceUrl: string) => async () => {
+        const response = await axios.get(resourceUrl);
+        return response.data;
+    }
+    
+    export function UserInfo ({ userId }: UserInfoProps) {
+        //const user = useUser(userId);
+        //const user = useResource(`/users/${userId}`);
+        const user = useDataSource(serverResource(`/users/${userId}`));
+    // ...
+
 ## Functional programming in react
 
+Minimize mutation and state changes and keep functions independent of external data. Functions are first-class (can be passed / returned)
 
+Applications in React: 
+
+- Controlled components
+- Function components (as opposed to class components)
+- HOCs (return other functions)
+- The following 3 sections
+- 
+### Recoursive components
+
+### Component composition
+
+### Partially applied components
 
