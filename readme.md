@@ -1142,7 +1142,122 @@ Applications in React:
 - 
 ### Recoursive components
 
+Components that refer to themselves inside of the components body.
+
+Example: display a nested object of any depth as a list of lists:
+
+RecursiveComponent.tsx
+
+    type RecursiveComponentPropsType = {
+        data: any
+    };
+    
+    const isObject = (x: unknown) => typeof x === 'object' && x !== null;
+    
+    export const RecursiveComponent = ({data}: RecursiveComponentPropsType) => {
+        if (!isObject(data)) {
+            return (<li>{data}</li>);
+        }
+    
+        const pairs = Object.entries(data);
+    
+        return (<>
+                {pairs.map(([key, val]) => {
+                    return (<li>
+                        {key}:
+                        <ul>
+                            <RecursiveComponent data={val}/>
+                        </ul>
+                    </li>)
+                    })
+                }
+            </>
+        );
+    };
+
+App.tsx
+
+    const nestedObject = {
+        a: 1,
+        b: {
+            b1: 4,
+            b2: {
+                b23: 'Hello',
+            },
+            b3: {
+                b31: {
+                    message: 'Hi',
+                },
+                b32: {
+                    message: 'Hi',
+                }
+            }
+        },
+        c: {
+            c1: 2,
+            c2: 3,
+        }
+    }
+    
+    function App() {
+        return (
+            <RecursiveComponent data={nestedObject} />
+        );
+    }
+
 ### Component composition
+
+Basically just creating components that use other components with pre-specified props:
+
+    export const Button = ({size, color, text, ...props}: {size: string, color: string, text: string}) => {
+        return (
+            <button style={{
+                padding: size === 'large' ? 32 : 8,
+                fontSize: size === 'large' ? 32 : 16,
+                backgroundColor: color
+            }}
+                    {...props}>
+                {text}
+            </button>
+        );
+    };
+    
+    export const DangerButton = ({text, ...props}: {text: string}) => <Button color={'red'} size={'large'} text={text} />
+
+Usage
+
+    <DangerButton text={"Danger!!!"} />
 
 ### Partially applied components
 
+As a next step, we can make a function that pre-applies props and returns a component where only the remaining props must be specified (though all can be specified and overwrite the pre-applied ones):
+
+partiallyApply.tsx
+
+    export const partiallyApply = (Component: React.ComponentType<any>, partialProps: object) => {
+        return (props: any) => {
+            return <Component {...partialProps} {...props} />
+        }
+    };
+    
+    export const Button = ({size, color, text, ...props}: {size: string, color: string, text: string}) => {
+        return (
+            <button style={{
+                padding: size === 'large' ? 32 : 8,
+                fontSize: size === 'large' ? 32 : 16,
+                backgroundColor: color
+            }}
+                    {...props}>
+                {text}
+            </button>
+        );
+    };
+    
+    export const DangerButton = partiallyApply(Button, {color: 'red'});
+    export const BigSuccessButton = partiallyApply(Button, {color: 'green', size: 'large'});
+
+
+Usage 
+
+    <DangerButton text={'Oh no!'}/>
+    <BigSuccessButton text={'Oh yes!'}/>
