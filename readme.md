@@ -31,8 +31,19 @@ All code is converted to typescript.
   - [Uncontrolled onboarding flows](#uncontrolled-onboarding-flows)
   - [Controlled onboarding flow](#controlled-onboarding-flow)
 - [Higher order components](#higher-order-components)
+  - [Printing props wiht HOCs](#printing-props-wiht-hocs)
+  - [Loading data with HOCs](#loading-data-with-hocs)
+  - [Modifying (server) data with HOCs](#modifying-server-data-with-hocs)
+  - [Creating forms with HOCs](#creating-forms-with-hocs)
+  - [HOC improvements](#hoc-improvements)
 - [Custom hooks patterns](#custom-hooks-patterns)
+  - [useUser](#useuser)
+  - [useResource](#useresource)
+  - [useDataSource](#usedatasource)
 - [Functional programming in react](#functional-programming-in-react)
+  - [Recoursive components](#recoursive-components)
+  - [Component composition](#component-composition)
+  - [Partially applied components](#partially-applied-components)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
